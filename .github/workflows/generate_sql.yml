@@ -1,0 +1,45 @@
+# .github/workflows/generate_sql.yml
+name: Generate SQL from Constraints
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'constraints.yaml'
+      - 'generate_sql_from_yaml.js'
+  pull_request:
+    branches: [ "main" ]
+    paths:
+      - 'constraints.yaml'
+      - 'generate_sql_from_yaml.js'
+  workflow_dispatch:
+
+jobs:
+  generate_sql:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 'lts/*'
+
+      - name: Install dependencies
+        run: npm install js-yaml
+
+      - name: Generate SQL
+        id: generate_sql_step
+        run: node generate_sql_from_yaml.js constraints.yaml generated_sql.sql
+        env:
+          GITHUB_TOKEN: <span class="math-inline">\{\{ secrets\.GITHUB\_TOKEN \}\}
+\- name\: Output SQL to logs \(Optional\)
+run\: echo "Generated SQL\:\\n</span>{{ steps.generate_sql_step.outputs.sql_output }}"
+
+      - name: Commit generated SQL (Optional)
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "Automated: Generate SQL from constraints.yaml"
+          file_pattern: generated_sql.sql
