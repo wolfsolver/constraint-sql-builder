@@ -44,5 +44,5 @@ jobs:
       - name: Commit generated SQL
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: "Automated: Generate SQL from constraints.yaml"
+          branch: generated_sql 
           file_pattern: generated_sql.sql
