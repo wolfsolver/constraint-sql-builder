@@ -35,6 +35,8 @@ Follow these steps to get your `constraint-sql-builder` up and running.
 
 Define your data constraints in a YAML file and then run the Node.js script to generate the corresponding SQL.
 
+See (Syntax Documentation)[sintax-documentation.md].
+
 ### 1. Define Your Constraints (e.g., `constraints.yaml`)
 
 Create a `constraints.yaml` file at the root of your project with your constraint definitions. You can use the YAML structure we discussed, including `definitions`, `anchors`, and `merge keys` for reusability.
