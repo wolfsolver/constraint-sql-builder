@@ -35,10 +35,11 @@ jobs:
         run: node generate_sql_from_yaml.js constraints.yaml generated_sql.sql
         env:
           GITHUB_TOKEN: <span class="math-inline">\{\{ secrets\.GITHUB\_TOKEN \}\}
-\- name\: Output SQL to logs \(Optional\)
-run\: echo "Generated SQL\:\\n</span>{{ steps.generate_sql_step.outputs.sql_output }}"
 
-      - name: Commit generated SQL (Optional)
+      - name: Output SQL to logs \(Optional\)
+        run: echo "Generated SQL\:\\n</span>{{ steps.generate_sql_step.outputs.sql_output }}"
+        
+      - name: Commit generated SQL
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "Automated: Generate SQL from constraints.yaml"
