@@ -3,13 +3,13 @@ name: Generate SQL from Constraints
 
 on:
   push:
-    branches: [ "generated_sql" ]
+    branches: [ "main" ]
     paths:
       - 'constraints.yaml'
       - 'generate_sql_from_yaml.js'
       - '.github/workflows/generate_sql.yml'
   pull_request:
-    branches: [ "generated_sql" ]
+    branches: [ "main" ]
     paths:
       - 'constraints.yaml'
       - 'generate_sql_from_yaml.js'
@@ -36,7 +36,7 @@ jobs:
         id: generate_sql_step
         run: node generate_sql_from_yaml.js constraints.yaml generated_sql.sql
         env:
-          GITHUB_TOKEN: "{{ secrets.GITHUB_TOKEN }}"
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Output SQL to logs \(Optional\)
         run: echo "Generated SQL :\n{{ steps.generate_sql_step.outputs.sql_output }}"
@@ -44,5 +44,7 @@ jobs:
       - name: Commit generated SQL
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          branch: generated_sql 
+          branch: main 
           file_pattern: generated_sql.sql
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}          
