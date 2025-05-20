@@ -7,11 +7,13 @@ on:
     paths:
       - 'constraints.yaml'
       - 'generate_sql_from_yaml.js'
+      - '.github/workflows/generate_sql.yml'
   pull_request:
     branches: [ "main" ]
     paths:
       - 'constraints.yaml'
       - 'generate_sql_from_yaml.js'
+      - '.github/workflows/generate_sql.yml'
   workflow_dispatch:
 
 jobs:
