@@ -15,6 +15,9 @@ on:
       - 'generate_sql_from_yaml.js'
       - '.github/workflows/generate_sql.yml'
   workflow_dispatch:
+  
+permissions:
+  contents: write 
 
 jobs:
   generate_sql:
@@ -44,5 +47,6 @@ jobs:
       - name: Commit generated SQL
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
+          commit_message: "Update Generated SQL"
           file_pattern: generated_sql.sql
          
