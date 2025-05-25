@@ -51,38 +51,34 @@ Define your data constraints in a YAML file and then run the Node.js script to g
 
 See [Syntax Documentation](https://github.com/wolfsolver/constraint-sql-builder/wiki).
 
-### 1. Define Your Constraints (e.g., `constraints.yaml`)
+## Define Your Constraints (e.g., `constraints.yaml`)
 
 Create a `constraints.yaml` file at the root of your project with your constraint definitions. You can use the YAML structure we discussed, including `definitions`, `anchors`, and `merge keys` for reusability.
 
 ```yaml
 # Example: constraints.yaml
-constraints:
-  - severity: E
-    description: "Transaction date before account initial date"
-    left:
-      table: CHECKINGACCOUNT_V1
-      primary_key: TRANSID
-      foreign_key: ACCOUNTID
-      field: TRANSDATE
-    operator: "<"
-    right:
-      table: ACCOUNTLIST_V1
-      primary_key: ACCOUNTID
-      field: INITIALDATE
-    condition: "( DELETEDTIME is null OR DELETEDTIME = '' )"
-    comment: "INITIALDATE\ttransaction date before account initial date"
-  # Add more constraints here
-
 definitions:
-  primary_keys:
-    CHECKINGACCOUNT_V1: TRANSID
-    ACCOUNTLIST_V1: ACCOUNTID
-    CUSTOMER_V2: CUSTID
-    # ... other primary keys ...
+  SAMPLE_TABLE1_pk: &SAMPLE_TABLE1_pk
+    table: TABLE1
+    pk: TABLE1PK
+  SAMPLE_TABLE2_pk: &SAMPLE_TABLE2_pk
+    table: TABLE2
+    pk: TABLE2PK
 
-  left_checking_account_transdate: &left_checking_account_transdate
-    table: CHECKINGACCOUNT_V1
-    primary_key: *definitions.primary_keys.CHECKINGACCOUNT_V1
-    foreign_key: ACCOUNTID
-    field: TRANSDATE
+validation_rules:
+  - id: SAMPLE_TABLE1_FIELD1 NOT_NULL
+    priority: 0    # 0 = higt     999999999999 = low
+    severity: E
+    source:
+      table: TABLE1
+      pk: TABLE1PK
+      field: FIELD1
+    check:
+      operator: not null
+    on_fail:
+      message: "$source.field of $source.table is null"
+```
+
+## Full yaml example
+
+Todo
