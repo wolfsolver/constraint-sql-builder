@@ -21,17 +21,31 @@ Follow these steps to get your `constraint-sql-builder` up and running.
 
 1.  **Clone the repository:**
     ```bash
-    git clone [https://github.com/YourUsername/constraint-sql-builder.git](https://github.com/YourUsername/constraint-sql-builder.git)
+    git clone https://github.com/YourUsername/constraint-sql-builder.git
     cd constraint-sql-builder
     ```
 2.  **Install dependencies:**
     ```bash
-    npm install js-yaml
+    npm install express js-yaml
     ```
 
 ---
 
 ## ⚙️ Usage
+
+### From command line
+
+Simply run
+```bash
+node app/constraint-sql-builder.js your_source_file.yaml your_generated_file.sql
+```
+
+### from html
+
+Open local file docs/constraint-sql-builder-example-page.html from your pc (no internet connection is used).
+Upload your configuration file and download sql generated.
+
+### As git action
 
 Define your data constraints in a YAML file and then run the Node.js script to generate the corresponding SQL.
 
