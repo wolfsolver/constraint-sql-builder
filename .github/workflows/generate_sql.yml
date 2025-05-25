@@ -5,14 +5,14 @@ on:
   push:
     branches: [ "main" ]
     paths:
-      - 'constraints.yaml'
-      - 'constraint-sql-builder.js'
+      - 'app/sample/generic_example.yaml'
+      - 'app/constraint-sql-builder.js'
       - '.github/workflows/generate_sql.yml'
   pull_request:
     branches: [ "main" ]
     paths:
-      - 'constraints.yaml'
-      - 'constraint-sql-builder.js'
+      - 'app/sample/generic_example.yaml'
+      - 'app/constraint-sql-builder.js'
       - '.github/workflows/generate_sql.yml'
   workflow_dispatch:
   
@@ -37,7 +37,7 @@ jobs:
 
       - name: Generate SQL
         id: generate_sql_step
-        run: node constraint-sql-builder.js constraints.yaml generated_sql.sql
+        run: node app/constraint-sql-builder.js app/samples/generic_example.yaml app/output/generic_example.sql
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -48,5 +48,5 @@ jobs:
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "Update Generated SQL"
-          file_pattern: generated_sql.sql
+          file_pattern: generic_example.sql
          
