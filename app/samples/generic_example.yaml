@@ -1,0 +1,327 @@
+# File di esempio per configuratore DBCheck
+
+definitions:
+  SAMPLE_TABLE1_pk: &SAMPLE_TABLE1_pk
+    table: TABLE1
+    pk: TABLE1PK
+  SAMPLE_TABLE2_pk: &SAMPLE_TABLE2_pk
+    table: TABLE2
+    pk: TABLE2PK
+
+validation_rules:
+  - id: SAMPLE_TABLE1_FIELD1 NOT_NULL
+    # SQL TO GENERATE IS
+    # SELECT 'E' as severity,
+    #        'TABLE1' as SOURCE_TABLE,
+    #        TABLE1.TABLE1PK as SOURCE_TABLE_PK,
+    #        'FIELD1' as SOURCE_TABLE_FIELD,
+    #        TABLE1.FIELD as SOURCE_TABLE_FIELD_VALUE,
+    #        'FIELD1 of TABLE1 is null' as message
+    # FROM TABLE1
+    # WHERE NOT ( TABLE1.FIELD1 is null )
+    priority: 0    # 0 = higt     999999999999 = low
+    severity: E
+    source:
+      table: TABLE1
+      pk: TABLE1PK
+      field: FIELD1
+    check:
+      operator: not null
+    on_fail:
+      message: "$source.field of $source.table is null"
+
+  - id: SAMPLE_TABLE1_FIELD1 NOT_NULL with success
+    # SQL TO GENERATE IS
+    # SELECT 'E' as severity,
+    #        'TABLE1' as SOURCE_TABLE,
+    #        TABLE1.TABLE1PK as SOURCE_TABLE_PK,
+    #        'FIELD1' as SOURCE_TABLE_FIELD,
+    #        TABLE1.FIELD as SOURCE_TABLE_FIELD_VALUE,
+    #        'FIELD1 of TABLE1 is null' as message
+    # FROM TABLE1
+    # WHERE TABLE1.FIELD1 is null
+    severity: E
+    source:
+      table: TABLE1
+      pk: TABLE1PK
+      field: FIELD1
+    check:
+      operator: is null
+    on_success:
+      message: "$source.field of $source.table is null"
+
+  - id: SAMPLE_TABLE1_FIELD1 values check
+    # SQL TO GENERATE IS
+    # SELECT 'E' as severity,
+    #        'TABLE1' as SOURCE_TABLE,
+    #        TABLE1.TABLE1PK as SOURCE_TABLE_PK,
+    #        'FIELD1' as SOURCE_TABLE_FIELD,
+    #        TABLE1.FIELD as SOURCE_TABLE_FIELD_VALUE,
+    #        'FIELD1 of TABLE1 is not in ("Open","Closed")' as message
+    # FROM TABLE1
+    # WHERE NOT( TABLE1.FIELD1 in (valore1,valore2) )
+    severity: E
+    source:
+      table: TABLE1
+      pk: TABLE1PK
+      field: FIELD1
+    check:
+      operator: in
+      value: (valore1, valore2)
+    on_fail:
+      message: "$source.field of $source.table is not in $check.value"
+
+  - id: SAMPLE_TABLE1_FIELD1 values check between two field
+    # SQL TO GENERATE IS
+    # SELECT 'E' as severity,
+    #        'TABLE1' as SOURCE_TABLE,
+    #        TABLE1.TABLE1PK as SOURCE_TABLE_PK,
+    #        'FIELD1' as SOURCE_TABLE_FIELD,
+    #        TABLE1.FIELD as SOURCE_TABLE_FIELD_VALUE,
+    #        'FIELD1 of TABLE1 is not in ("Open","Closed")' as message
+    # FROM TABLE1
+    # WHERE not( TABLE1.FIELD1 = TABLE1.FIELD2 * TABLE1.FIELD3 )
+    severity: E
+    source:
+      table: TABLE1
+      pk: TABLE1PK
+      field: FIELD1
+    check:
+      sql: TABLE1.FIELD1 = TABLE1.FIELD2 * TABLE1.FIELD3
+    on_fail:
+      message: "$source.field of $source.table is not correct"
+
+  - id: SAMPLE_TABLE1_FIELD1 values check between two field using on_success
+    # SQL TO GENERATE IS
+    # SELECT 'E' as severity,
+    #        'TABLE1' as SOURCE_TABLE,
+    #        TABLE1.TABLE1PK as SOURCE_TABLE_PK,
+    #        'FIELD1' as SOURCE_TABLE_FIELD,
+    #        TABLE1.FIELD as SOURCE_TABLE_FIELD_VALUE,
+    #        'FIELD1 of TABLE1 is not in ("Open","Closed")' as message
+    # FROM TABLE1
+    # WHERE TABLE1.FIELD1 != TABLE1.FIELD2 * TABLE1.FIELD3
+    severity: E
+    source:
+      table: TABLE1
+      pk: TABLE1PK
+      field: FIELD1
+    check:
+      sql: TABLE1.FIELD1 != TABLE1.FIELD2 * TABLE1.FIELD3
+    on_success:
+      message: "$source.field of $source.table is not correct"
+
+  - id: SAMPLE_TABLE1_FIELD1 Simple FK on TABLE2 PK
+    # SQL TO GENERATE IS
+    # SELECT 'E' as severity,
+    #        'TABLE1' as SOURCE_TABLE,
+    #        TABLE1.TABLE1PK as SOURCE_TABLE_PK,
+    #        'FIELD1' as SOURCE_TABLE_FIELD,
+    #        TABLE1.FIELD as SOURCE_TABLE_FIELD_VALUE,
+    #        'FIELD1 of TABLE1 is not in table TABLE2' as message
+    # FROM TABLE1
+    #      LEFT JOIN TABLE2 on TABLE2PK = TABLE1.FIELD1
+    # WHERE TABLE2.TABLE2PK is null
+    severity: E
+    source:
+      table: TABLE1
+      pk: TABLE1PK
+      field: FIELD1
+    fk:
+      target:
+        table: TABLE2
+        pk: TABLE2PK
+    on_fail:
+      message: "$source.field of $source.table is not in table $fk.target.table"
+
+  - id: SAMPLE_TABLE1_FIELD1 Simple FK on TABLE2 on different field
+    # SQL TO GENERATE IS
+    # SELECT 'E' as severity,
+    #        'TABLE1' as SOURCE_TABLE,
+    #        TABLE1.TABLE1PK as SOURCE_TABLE_PK,
+    #        'FIELD1' as SOURCE_TABLE_FIELD,
+    #        TABLE1.FIELD as SOURCE_TABLE_FIELD_VALUE,
+    #        'FIELD1 of TABLE1 is not in table TABLE2 on field TABLE2FIELD' as message
+    # FROM TABLE1
+    #      LEFT JOIN TABLE2 on TABLE2FIELD = TABLE1.FIELD1
+    # WHERE TABLE2.TABLE2PK is null
+    severity: E
+    source:
+      table: TABLE1
+      pk: TABLE1PK
+      field: FIELD1
+    fk:
+      target:
+        table: TABLE2
+        pk: TABLE2PK
+        field: TABLE2FIELD
+
+  - id: SAMPLE_TABLE1_FIELD1 with FK checking two field correlation as message
+    # SQL TO GENERATE IS
+    # SELECT 'E' as severity,
+    #        'TABLE1' as SOURCE_TABLE,
+    #        TABLE1.TABLE1PK as SOURCE_TABLE_PK,
+    #        'FIELD1' as SOURCE_TABLE_FIELD,
+    #        TABLE1.FIELD as SOURCE_TABLE_FIELD_VALUE,
+    #        'FIELD1 of TABLE1 is not in table TABLE2 on field TABLE2FIELD'
+    # FROM TABLE1
+    #      LEFT JOIN TABLE2 on TABLE2FIELD = TABLE1.FIELD1
+    # WHERE TABLE1.FIELD1 < TABLE2.TABLE2FIELD
+    severity: E
+    source:
+      table: TABLE1
+      pk: TABLE1PK
+      field: FIELD1
+    fk:
+      target:
+        table: TABLE2
+        pk: TABLE2PK
+        field: TABLE2FIELD
+    check:
+      sql: TABLE1.FIELD1 < TABLE2.TABLE2FIELD
+    on_success:
+      message: "$source.field of $source.table cannot be before $fk.target.table.$fk.target.field"
+
+  - id: SAMPLE_TABLE1_FIELD1 with FK checking two field correlation as message and fix
+    # SQL TO GENERATE IS
+    # SELECT 'E' as severity,
+    #        'TABLE1' as SOURCE_TABLE,
+    #        TABLE1.TABLE1PK as SOURCE_TABLE_PK,
+    #        'FIELD1' as SOURCE_TABLE_FIELD,
+    #        TABLE1.FIELD as SOURCE_TABLE_FIELD_VALUE,
+    #        'FIELD1 of TABLE1 is not in table TABLE2 on field TABLE2FIELD'
+    # FROM TABLE1
+    #      LEFT JOIN TABLE2 on TABLE2FIELD = TABLE1.FIELD1
+    # WHERE TABLE1.FIELD1 < TABLE2.TABLE2FIELD
+    severity: E
+    source:
+      table: TABLE1
+      pk: TABLE1PK
+      field: FIELD1
+    fk:
+      target:
+        table: TABLE2
+        pk: TABLE2PK
+        field: TABLE2FIELD
+    check:
+      sql: TABLE1.FIELD1 < TABLE2.TABLE2FIELD
+    on_success:
+      message: "$source.field of $source.table cannot be before $fk.target.table.$fk.target.field"
+
+
+        ### on on_fail or on_success can be specified addition info:
+        #      fix:    #enable fix, can be fixs
+        #        delete:   # delete identified row
+        #        update:   # update inditified row
+
+
+  - id: SAMPLE_TABLE1_FIELD1 NOT_NULL with simple fix update
+    # SQL TO GENERATE IS
+    # SELECT 'E' as severity,
+    #        'TABLE1' as SOURCE_TABLE,
+    #        TABLE1.TABLE1PK as SOURCE_TABLE_PK,
+    #        'FIELD1' as SOURCE_TABLE_FIELD,
+    #        TABLE1.FIELD as SOURCE_TABLE_FIELD_VALUE,
+    #        'FIELD1 of TABLE1 is null' as message,
+    #        'UPDATE TABLE1 SET FIELD1 = "" WHERE TABLE1.TABLE1PK = ' || TABLE1.TABLE1PK as FIX
+    # FROM TABLE1
+    # WHERE NOT ( TABLE1.FIELD1 is null )
+    severity: E
+    source:
+      table: TABLE1
+      pk: TABLE1PK
+      field: FIELD1
+    check:
+      operator: not null
+    on_fail:
+      message: "$source.field of $source.table is null"
+      fix:
+        update: ""
+
+  - id: SAMPLE_TABLE1_FIELD1 NOT_NULL with simple fix DELETE
+    # SQL TO GENERATE IS
+    # SELECT 'E' as severity,
+    #        'TABLE1' as SOURCE_TABLE,
+    #        TABLE1.TABLE1PK as SOURCE_TABLE_PK,
+    #        'FIELD1' as SOURCE_TABLE_FIELD,
+    #        TABLE1.FIELD as SOURCE_TABLE_FIELD_VALUE,
+    #        'FIELD1 of TABLE1 is null' as message,
+    #        'DELETE FROM TABLE1 WHERE TABLE1.TABLE1PK = ' || TABLE1.TABLE1PK as FIX
+    # FROM TABLE1
+    # WHERE NOT ( TABLE1.FIELD1 is null )
+    severity: E
+    source:
+      table: TABLE1
+      pk: TABLE1PK
+      field: FIELD1
+    check:
+      operator: not null
+    on_fail:
+      message: "$source.field of $source.table is null"
+      fix:
+        delete:
+
+  - id: SAMPLE_TABLE1_FIELD1 NOT_NULL with copmplex sql
+    # SQL TO GENERATE IS
+    # SELECT 'E' as severity,
+    #        'TABLE1' as SOURCE_TABLE,
+    #        TABLE1.TABLE1PK as SOURCE_TABLE_PK,
+    #        'FIELD1' as SOURCE_TABLE_FIELD,
+    #        TABLE1.FIELD as SOURCE_TABLE_FIELD_VALUE,
+    #        'FIELD1 of TABLE1 is null' as message,
+    #        'UPDATE TABLE1 SET FIELD1 = "unknow" WHERE TABLE1.TABLE1PK = ${{TABLE1.TABLE1PK}}' as FIX
+    #               // Notice that ${{TABLE1.TABLE1PK}} need to be values of field in row as field SOURCE_TABLE_PK
+    # FROM TABLE1
+    # WHERE NOT ( TABLE1.FIELD1 is null )
+    severity: E
+    source:
+      table: TABLE1
+      pk: TABLE1PK
+      field: FIELD1
+    check:
+      operator: not null
+    on_fail:
+      message: "$source.field of $source.table is null"
+      fix: UPDATE TABLE1 SET FIELD1 = "unknow" WHERE TABLE1.TABLE1PK = ${{TABLE1.TABLE1PK}}
+
+  - id: FREE FORM CHECK
+    # SQL TO GENERATE IS
+    # SELECT 'E' as severity,
+    #        'TABLE1' as SOURCE_TABLE,
+    #        TABLE1.TABLE1PK as SOURCE_TABLE_PK,
+    #        'FIELD1' as SOURCE_TABLE_FIELD,
+    #        'FIELD1 of TABLE1  con condizioni custom' as message,
+    # FROM TABLE1
+    # WHERE qualuqnue_WHERE_sql_valida
+    severity: E
+    source:
+      table: TABLE1
+      pk: TABLE1PK
+    check: qualuqnue_WHERE_sql_valida
+    on_fail:
+      message: "$source.field of $source.table con condizioni custom"
+
+  - id: FREE FORM CHECK con FK
+    # SQL TO GENERATE IS
+    # SELECT 'E' as severity,
+    #        'TABLE1' as SOURCE_TABLE,
+    #        TABLE1.TABLE1PK as SOURCE_TABLE_PK,
+    #        'FIELD1' as SOURCE_TABLE_FIELD,
+    #        TABLE1.FIELD as SOURCE_TABLE_FIELD_VALUE,
+    #        'FIELD1 of TABLE1 con condizioni custom' as message
+    # FROM TABLE1
+    #      LEFT JOIN TABLE2 on TABLE2FIELD = TABLE1.FIELD1
+    # WHERE qualuqnue_WHERE_sql_valida
+    severity: E
+    source:
+      table: TABLE1
+      pk: TABLE1PK
+      field: FIELD1
+    fk:
+      target:
+        table: TABLE2
+        pk: TABLE2PK
+        field: TABLE2FIELD
+    check: qualuqnue_WHERE_sql_valida
+    on_fail:
+      message: "$source.field of $source.table con condizioni custom"

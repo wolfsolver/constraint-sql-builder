@@ -6,13 +6,13 @@ on:
     branches: [ "main" ]
     paths:
       - 'constraints.yaml'
-      - 'generate_sql_from_yaml.js'
+      - 'constraint-sql-builder.js'
       - '.github/workflows/generate_sql.yml'
   pull_request:
     branches: [ "main" ]
     paths:
       - 'constraints.yaml'
-      - 'generate_sql_from_yaml.js'
+      - 'constraint-sql-builder.js'
       - '.github/workflows/generate_sql.yml'
   workflow_dispatch:
   
@@ -37,7 +37,7 @@ jobs:
 
       - name: Generate SQL
         id: generate_sql_step
-        run: node generate_sql_from_yaml.js constraints.yaml generated_sql.sql
+        run: node constraint-sql-builder.js constraints.yaml generated_sql.sql
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

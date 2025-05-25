@@ -2,9 +2,9 @@
   "name": "constraint-sql-builder",
   "version": "1.0.0",
   "description": "A Node.js tool to generate SQL SELECT statements from declarative YAML constraint definitions.",
-  "main": "generate_sql_from_yaml.js",
+  "main": "constraint-sql-builder.js",
   "scripts": {
-    "start": "node generate_sql_from_yaml.js constraints.yaml generated_sql.sql"
+    "start": "node constraint-sql-builder.js constraints.yaml generated_sql.sql"
   },
   "keywords": [
     "sql",
@@ -16,6 +16,15 @@
   "author": "WolfSolver <wolfsolver@prudenzano.org>",
   "license": "GPL3",
   "dependencies": {
+    "express": "^5.1.0",
     "js-yaml": "^4.1.0"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wolfsolver/constraint-sql-builder.git"
+  },
+  "bugs": {
+    "url": "https://github.com/wolfsolver/constraint-sql-builder/issues"
+  },
+  "homepage": "https://github.com/wolfsolver/constraint-sql-builder#readme"
 }
