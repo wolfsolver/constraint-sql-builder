@@ -67,7 +67,7 @@ definitions:
 
 validation_rules:
   - id: SAMPLE_TABLE1_FIELD1 NOT_NULL
-    priority: 0    # 0 = higt     999999999999 = low
+    priority: 0    # 0 = high     999999999999 = low
     severity: E
     source:
       table: TABLE1
