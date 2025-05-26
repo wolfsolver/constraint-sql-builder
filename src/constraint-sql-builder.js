@@ -1,9 +1,12 @@
-const fs = require('fs');
-const path = require('path');
-const yaml = require('js-yaml');
+import yaml from 'js-yaml';
 
-// Funzione principale per la generazione SQL
-function generateSqlFromYaml(yamlContent) {
+
+/**
+ * Esegue un comando su un input di testo e restituisce un output.
+ * @param {string} inputText - L'input di testo da elaborare.
+ * @returns {string} L'output di testo elaborato.
+ */
+export function generateSqlFromYaml(yamlContent) {
     let generatedSql = '';
     try {
         const config = yaml.load(yamlContent);

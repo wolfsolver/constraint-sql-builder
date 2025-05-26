@@ -1,8 +1,9 @@
-// Importa la core engine
-import { generateSqlFromYaml } from './constraint-sql-builder.js';
 
-// Logica per l'esecuzione da riga di comando
-if (require.main === module) {
+import path from 'path';
+import fs from 'node:fs';
+
+import { generateSqlFromYaml } from './constraint-sql-builder.js'; // Importa la funzione condivisa
+
     const args = process.argv.slice(2); // Ignora 'node' e 'generate-sql-cli.js'
 
     if (args.length !== 2) {
@@ -22,7 +23,3 @@ if (require.main === module) {
         console.error(`Errore: ${error.message}`);
         process.exit(1);
     }
-} else {
-    // Esporta la funzione se il modulo viene richiesto da un altro script (es. test)
-    module.exports = generateSqlFromYaml;
-}

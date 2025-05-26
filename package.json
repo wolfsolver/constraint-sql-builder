@@ -2,7 +2,15 @@
   "name": "constraint-sql-builder",
   "version": "1.0.0",
   "description": "A Node.js tool to generate SQL SELECT statements from declarative YAML constraint definitions.",
+  "type": "module",
   "main": "/app/constraint-sql-builder-cli.js",
+  "scripts": {
+    "cli": "node src/constraint-sql-builder-cli.js",
+    "build-browser": "webpack --config webpack.config.js",
+    "start-server": "node server.js",
+    "dev": "npm run build-browser",
+    "setup": "npm install && npm run build-browser"
+  },
   "keywords": [
     "sql",
     "generator",
@@ -14,7 +22,9 @@
   "license": "GPL3",
   "dependencies": {
     "express": "^5.1.0",
-    "js-yaml": "^4.1.0"
+    "js-yaml": "^4.1.0",
+    "webpack": "^5.99.9",
+    "webpack-cli": "^6.0.1"
   },
   "repository": {
     "type": "git",

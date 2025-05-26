@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DBCheck SQL Generator</title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; }
+        textarea { width: 100%; height: 200px; margin-bottom: 10px; padding: 10px; border: 1px solid #ccc; }
+        button { padding: 10px 20px; background-color: #007bff; color: white; border: none; cursor: pointer; }
+        button:hover { background-color: #0056b3; }
+        pre { background-color: #f4f4f4; padding: 10px; border: 1px solid #ddd; overflow-x: auto; }
+        .container { display: flex; gap: 20px; }
+        .input-section, .output-section { flex: 1; }
+    </style>
+</head>
+<body>
+<h1>DBCheck SQL Generator</h1>
+
+<p>Incolla qui il tuo file YAML di configurazione o trascinalo nell'area di testo.</p>
+
+<div class="container">
+    <div class="input-section">
+        <h2>Input YAML</h2>
+        <textarea id="yamlInput" placeholder="Incolla qui il tuo YAML o trascina un file YAML..."></textarea>
+        <input type="file" id="yamlFile" accept=".yaml, .yml">
+        <button id="generateBtn">Genera SQL</button> </div>
+    <div class="output-section">
+        <h2>Output SQL</h2>
+        <pre id="sqlOutput"></pre>
+        <button style="display: none;" id="downloadBtn">Scarica SQL</button> </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js"></script>
+<script src="bundle.js"></script>
+</body>
+</html>
