@@ -37,7 +37,7 @@ jobs:
 
       - name: Generate SQL
         id: generate_sql_step
-        run: node app/constraint-sql-builder.js app/samples/generic_example.yaml app/output/generic_example.sql
+        run: node app/constraint-sql-builder-cli.js app/samples/generic_example.yaml app/output/generic_example.sql
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
