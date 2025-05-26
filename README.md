@@ -12,6 +12,8 @@ A Node.js tool designed to automate the generation of SQL `SELECT` statements. I
 
 Follow these steps to get your `constraint-sql-builder` up and running.
 
+or try our our [Live Demo](constraint-sql-builder-web.html)
+
 ### Prerequisites
 
 * Node.js (LTS version recommended)
