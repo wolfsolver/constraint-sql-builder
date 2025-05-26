@@ -35,7 +35,6 @@ jobs:
       - name: Install dependencies
         run: npm install js-yaml express js-yaml
 
-
       - name: Generate bundle.js
         id: generate_bundle_js_step
         run: npm run build-browser
@@ -46,7 +45,7 @@ jobs:
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "Update bundle.js"
-          file_pattern: bundle.js
+          file_pattern: docs/bundle.js
 
       - name: Create output directory
         run: mkdir -p samples/output
@@ -64,4 +63,4 @@ jobs:
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "Update Generated SQL"
-          file_pattern: generic_example.sql
+          file_pattern: samples/output/generic_example.sql
