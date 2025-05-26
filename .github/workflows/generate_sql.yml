@@ -5,14 +5,14 @@ on:
   push:
     branches: [ "main" ]
     paths:
-      - 'app/sample/generic_example.yaml'
-      - 'app/constraint-sql-builder.js'
+      - 'sample/generic_example.yaml'
+      - 'src/*'
       - '.github/workflows/generate_sql.yml'
   pull_request:
     branches: [ "main" ]
     paths:
-      - 'app/sample/generic_example.yaml'
-      - 'app/constraint-sql-builder.js'
+      - 'sample/generic_example.yaml'
+      - 'src/*'
       - '.github/workflows/generate_sql.yml'
   workflow_dispatch:
   
@@ -43,7 +43,7 @@ jobs:
 
       - name: Generate sample SQL
         id: generate_sql_step
-        run: node app/constraint-sql-builder-cli.js samples/generic_example.yaml sample/output/generic_example.sql
+        run: node src/constraint-sql-builder-cli.js samples/generic_example.yaml sample/output/generic_example.sql
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
