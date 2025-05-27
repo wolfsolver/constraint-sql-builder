@@ -128,11 +128,10 @@ validation_rules:
       pk: TABLE1PK
       field: FIELD1
     fk:
-      target:
-        table: TABLE2
-        pk: TABLE2PK
+      table: TABLE2
+      pk: TABLE2PK
     on_fail:
-      message: "$source.field of $source.table is not in table $fk.target.table"
+      message: "$source.field of $source.table is not in table $fk.table"
 
   - id: SAMPLE_TABLE1_FIELD1 Simple FK on TABLE2 on different field
     # SQL TO GENERATE IS
@@ -151,10 +150,9 @@ validation_rules:
       pk: TABLE1PK
       field: FIELD1
     fk:
-      target:
-        table: TABLE2
-        pk: TABLE2PK
-        field: TABLE2FIELD
+      table: TABLE2
+      pk: TABLE2PK
+      field: TABLE2FIELD
 
   - id: SAMPLE_TABLE1_FIELD1 with FK checking two field correlation as message
     # SQL TO GENERATE IS
@@ -173,14 +171,13 @@ validation_rules:
       pk: TABLE1PK
       field: FIELD1
     fk:
-      target:
-        table: TABLE2
-        pk: TABLE2PK
-        field: TABLE2FIELD
+      table: TABLE2
+      pk: TABLE2PK
+      field: TABLE2FIELD
     check:
       sql: TABLE1.FIELD1 < TABLE2.TABLE2FIELD
     on_success:
-      message: "$source.field of $source.table cannot be before $fk.target.table.$fk.target.field"
+      message: "$source.field of $source.table cannot be before $fk.table.$fk.field"
 
   - id: SAMPLE_TABLE1_FIELD1 with FK checking two field correlation as message and fix
     # SQL TO GENERATE IS
@@ -199,14 +196,13 @@ validation_rules:
       pk: TABLE1PK
       field: FIELD1
     fk:
-      target:
-        table: TABLE2
-        pk: TABLE2PK
-        field: TABLE2FIELD
+      table: TABLE2
+      pk: TABLE2PK
+      field: TABLE2FIELD
     check:
       sql: TABLE1.FIELD1 < TABLE2.TABLE2FIELD
     on_success:
-      message: "$source.field of $source.table cannot be before $fk.target.table.$fk.target.field"
+      message: "$source.field of $source.table cannot be before $fk.table.$fk.field"
 
 
         ### on on_fail or on_success can be specified addition info:
@@ -318,10 +314,9 @@ validation_rules:
       pk: TABLE1PK
       field: FIELD1
     fk:
-      target:
-        table: TABLE2
-        pk: TABLE2PK
-        field: TABLE2FIELD
+      table: TABLE2
+      pk: TABLE2PK
+      field: TABLE2FIELD
     check: qualuqnue_WHERE_sql_valida
     on_fail:
       message: "$source.field of $source.table con condizioni custom"

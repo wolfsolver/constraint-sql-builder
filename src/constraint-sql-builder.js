@@ -22,91 +22,85 @@ export function generateSqlFromYaml(yamlContent) {
             return priorityA - priorityB;
         });
 
+       let counter = 0;
         config.validation_rules.forEach(rule => {
-            let selectClause = ''
-            selectClause += `SELECT \n`;
-            selectClause += `       '${rule.id}' as ID,\n`;
-            selectClause += `       '${rule.severity}' as SEVERITY,\n`;
-            selectClause += `       '${rule.source.table}' as SOURCE_TABLE,\n`;
-            selectClause += `       ${rule.source.table}.${rule.source.pk} as SOURCE_TABLE_PK`;
+            counter++;
+
+            console.log("rule = ",rule);
+            let hasOnFail = rule.hasOwnProperty('on_fail')
+
+            // check mandatory field
+            if (! rule.source.table )   {
+              throw new Error("Missing source Table");
+            }
+
+            let tableAlias = "__LEFT_TABLE";
+            let xxx = "__RIGHT_TABLE"; // TODO
+
+            // set default
+            if ( ! rule.id ) { rule.id = `Unnamed #${counter}` ;}
+            if ( ! rule.severity ) { rule.severity = "E" ;}
+            if ( ! rule.check ) { rule.check.operator = "IS NOT NULL" ;}
+
+            // check mandatory field
+            if (! rule.check )   {
+              throw new Error("Missing check");
+            }
+
+            let selectClause = '';
+            selectClause += `  , '${rule.id}' AS ID\n`;
+            selectClause += `  , '${rule.severity}' AS SEVERITY\n`;
+            selectClause += `  , '${rule.source.table}' AS TABLE_NAME_VALUE\n`;
+
+            if ( rule.source.pk ) {
+              selectClause += `  , '${rule.source.pk}' AS TABLE_PK_NAME\n`;
+              selectClause += `  , ${tableAlias}.${rule.source.pk} AS TABLE_PK_VALUE\n`;
+            } else {
+              selectClause += "  , null AS TABLE_PK_NAME\n";
+              selectClause += "  , null AS TABLE_PK_VALUE\n";
+            }
 
             if (rule.source.field) {
-                selectClause += `,\n       '${rule.source.field}' as SOURCE_TABLE_FIELD,\n`;
-                selectClause += `       ${rule.source.table}.${rule.source.field} as SOURCE_TABLE_FIELD_VALUE`;
+                selectClause += `  , '${rule.source.field}' AS TABLE_FIELD_NAME\n`;
+                selectClause += `  , ${tableAlias}.${rule.source.field} AS TABLE_FIELD_VALUE\n`;
             } else {
-                selectClause += `,\n       NULL as SOURCE_TABLE_FIELD,\n`;
-                selectClause += `       NULL as SOURCE_TABLE_FIELD_VALUE`;
+                selectClause += `  , null AS TABLE_FIELD_NAME\n`;
+                selectClause += `  , null AS TABLE_FIELD_VALUE\n`;
             }
 
-            let message = rule.on_fail?.message || rule.on_success?.message || rule.id;
-            message = message.replace(/\$source\.field/g, rule.source.field || 'N/A');
-            message = message.replace(/\$source\.table/g, rule.source.table);
-            if (rule.check && rule.check.value) {
-                message = message.replace(/\$check\.value/g, rule.check.value);
-            }
-            if (rule.fk && rule.fk.target) {
-                message = message.replace(/\$fk\.target\.table/g, rule.fk.target.table);
-                message = message.replace(/\$fk\.target\.field/g, rule.fk.target.field || rule.fk.target.pk);
-            }
-            selectClause += `,\n       '${message}' as MESSAGE`;
+            let fieldForStandardWhere = rule.source.field || rule.source.pk;
 
-            let fromClause = `FROM ${rule.source.table}`;
-            let whereClause = '';
+            // message could to be set during where
+            let message = rule.on_fail?.message || rule.on_success?.message || null;
+
+            let fromClause = `${rule.source.table} AS ${tableAlias}\n`;
             let joinClause = '';
-
             if (rule.fk) {
-                const targetTable = rule.fk.target.table;
-                const targetPk = rule.fk.target.pk;
-                const targetField = rule.fk.target.field || targetPk;
-                const sourceFiled = rule.source.field || rule.source.pk;
+                const targetPk    = rule.fk.pk || rule.fk.field;
+                const targetField = rule.fk.field || rule.fk.pk;
+                const sourceFiled = rule.source.field || rule.source.field || rule.source.pk;
 
-                joinClause = `LEFT JOIN ${targetTable} ON ${targetTable}.${targetField} = ${rule.source.table}.${sourceFiled}`;
+                joinClause = `LEFT JOIN ${rightTable} ON ${rule.fk.table}.${targetPk} = ${rule.source.table}.${sourceFiled}`;
 
-                if (!rule.check || !rule.check.sql) {
-                    whereClause = `WHERE ${targetTable}.${targetPk} IS NULL`;
-                }
             }
 
-            if (rule.check) {
-                if (rule.check.operator) {
-                    switch (rule.check.operator) {
-                        case 'not null':
-                            whereClause = `WHERE ${rule.source.table}.${rule.source.field} IS NULL`;
-                            if (rule.on_success) {
-                                whereClause = `WHERE NOT ( ${rule.source.table}.${rule.source.field} IS NULL )`;
-                            }
-                            break;
-                        case 'is null':
-                            whereClause = `WHERE NOT ( ${rule.source.table}.${rule.source.field} IS NULL )`;
-                            if (rule.on_success) {
-                                whereClause = `WHERE ${rule.source.table}.${rule.source.field} IS NULL`;
-                            }
-                            break;
-                        case 'in':
-                            whereClause = `WHERE NOT ( ${rule.source.table}.${rule.source.field} IN ${rule.check.value} )`;
-                            if (rule.on_success) {
-                                whereClause = `WHERE ${rule.source.table}.${rule.source.field} IN ${rule.check.value}`;
-                            }
-                            break;
-                        default:
-                            console.warn(`Operatore non supportato: ${rule.check.operator} for rule ${rule.id}`);
-                    }
-                } else if (rule.check.sql) {
-                    if (rule.on_fail) {
-                        whereClause = `WHERE NOT ( ${rule.check.sql} )`;
-                    } else {
-                        whereClause = `WHERE ${rule.check.sql}`;
-                    }
-                }
-            } else if (rule.fk && rule.on_success) {
-                const targetTable = rule.fk.target.table;
-                const targetPk = rule.fk.target.pk;
-                whereClause = `WHERE ${targetTable}.${targetPk} IS NOT NULL`;
+            let whereClause = '';
+            if (rule.check.operator) {
+               let whereClauseLocal = `${tableAlias}.${fieldForStandardWhere} ${rule.check.operator}`;
+               if ( message == null ) {
+                 message = `${whereClauseLocal}`;
+               if (hasOnFail) {
+                  // condizione where invertita succesivamente
+                   message = `NOT ${whereClauseLocal}`;
+                 }
+               }
+               whereClause += `AND ( ${whereClauseLocal} )\n`;
             }
 
             const fixSection = rule.on_fail?.fix || rule.on_success?.fix;
 
             if (fixSection) {
+                // todo
                 let fixSql = '';
                 if (typeof fixSection === 'string') {
                     fixSql = fixSection.replace(/\$\{\{([A-Z0-9_]+\.[A-Z0-9_]+)\}\}/g, (match, p1) => {
@@ -123,12 +117,22 @@ export function generateSqlFromYaml(yamlContent) {
                 }
             }
 
-            generatedSql += `-- Rule ID: ${rule.id}\n`;
-            generatedSql += `${selectClause}\n`;
-            generatedSql += `${fromClause}\n`;
-            if (joinClause) generatedSql += `${joinClause}\n`;
-            if (whereClause) generatedSql += `${whereClause}\n`;
-            generatedSql += `;\n\n`;
+            // replace all placeholder in message
+           message = message.replace(tableAlias, rule.source.table);
+
+            selectClause += `  , '${message}' AS MESSAGE`;
+
+            generatedSql += `SELECT ROW_NUMBER() over( order by ID ) RowNum\n${selectClause}\n`;
+            generatedSql += `FROM ${fromClause}`;
+            if (joinClause) generatedSql += `${joinClause}`;
+            if (whereClause) {
+                whereClause = `1 ${whereClause} `
+                if (hasOnFail) {
+                  whereClause = `NOT ( ${whereClause} )`;
+                }
+                generatedSql += `WHERE ${whereClause}`;
+            }
+            generatedSql += `;\n`;
         });
         return generatedSql;
     } catch (e) {

@@ -22,7 +22,20 @@
 <div class="container">
     <div class="input-section">
         <h2>Input YAML</h2>
-        <textarea id="yamlInput" placeholder="Incolla qui il tuo YAML o trascina un file YAML..."></textarea>
+        <textarea id="yamlInput" placeholder="Incolla qui il tuo YAML o trascina un file YAML...">
+validation_rules:
+  - id: SAMPLE_TABLE1_FIELD1 NOT_NULL
+    priority: 0
+    severity: E
+    source:
+      table: TABLE1
+      pk: TABLE1PK
+      field: FIELD1
+    check:
+      operator: not null
+    on_fail:
+      message: "$source.field of $source.table is null"
+        </textarea>
         <input type="file" id="yamlFile" accept=".yaml, .yml">
         <button id="generateBtn">Genera SQL</button> </div>
     <div class="output-section">

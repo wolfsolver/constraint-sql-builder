@@ -1,0 +1,8 @@
+# Set minimo
+validation_rules:
+  - source:
+      table: TABLE1
+      field: FIELD1
+    check:
+      operator: is null
+    on_fail:

@@ -1,3 +1,4 @@
 node_modules/
 /samples/output/generic_example.sql
 /package-lock.json
+/test/tmp_out
