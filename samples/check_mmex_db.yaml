@@ -1,0 +1,246 @@
+# Initial release for test to do on Money Manager Ex Database
+
+setting:
+  separator: union  # valid or ;
+  add_row_id: false
+  
+definitions:
+  INFOTABLE_V1_pk: &INFOTABLE_V1_pk
+    table: INFOTABLE_V1
+    pk: INFOID
+  ASSETS_V1_pk: &ASSETS_V1_pk
+    table: ASSETS_V1
+    pk: ASSETID
+  STOCK_V1_pk: &STOCK_V1_pk
+    table: STOCK_V1
+    pk: STOCKID
+  STOCKHISTORY_V1_pk: &STOCKHISTORY_V1_pk
+    table: STOCKHISTORY_V1
+    pk: HISTID
+  ACCOUNTLIST_V1_pk: &ACCOUNTLIST_V1_pk
+    table: ACCOUNTLIST_V1
+    pk: ACCOUNTID
+  PAYEE_V1_pk: &PAYEE_V1_pk
+    table: PAYEE_V1
+    pk: PAYEEID
+  CHECKINGACCOUNT_V1_pk: &CHECKINGACCOUNT_V1_pk
+    table: CHECKINGACCOUNT_V1
+    pk: TRANSID
+  CURRENCYFORMATS_V1_pk: &CURRENCYFORMATS_V1_pk
+    table: CURRENCYFORMATS_V1
+    pk: CURRENCYID
+  CURRENCYHISTORY_V1_pk: &CURRENCYHISTORY_V1_pk
+    table: CURRENCYHISTORY_V1
+    pk: CURRHISTID
+  BUDGETYEAR_V1_pk: &BUDGETYEAR_V1_pk
+    table: BUDGETYEAR_V1
+    pk: BUDGETYEARID
+  BILLSDEPOSITS_V1_pk: &BILLSDEPOSITS_V1_pk
+    table: BILLSDEPOSITS_V1
+    pk: BDID
+  SPLITTRANSACTIONS_V1_pk: &SPLITTRANSACTIONS_V1_pk
+    table: SPLITTRANSACTIONS_V1
+    pk: SPLITTRANSID
+  BUDGETSPLITTRANSACTIONS_V1_pk: &BUDGETSPLITTRANSACTIONS_V1_pk
+    table: BUDGETSPLITTRANSACTIONS_V1
+    pk: SPLITTRANSID
+  BUDGETTABLE_V1_pk: &BUDGETTABLE_V1_pk
+    table: BUDGETTABLE_V1
+    pk: BUDGETENTRYID
+  REPORT_V1_pk: &REPORT_V1_pk
+    table: REPORT_V1
+    pk: REPORTID
+  ATTACHMENT_V1_pk: &ATTACHMENT_V1_pk
+    table: ATTACHMENT_V1
+    pk: ATTACHMENTID
+  CUSTOMFIELDDATA_V1_pk: &CUSTOMFIELDDATA_V1_pk
+    table: CUSTOMFIELDDATA_V1
+    pk: FIELDATADID
+  CUSTOMFIELD_V1_pk: &CUSTOMFIELD_V1_pk
+    table: CUSTOMFIELD_V1
+    pk: FIELDID
+  TRANSLINK_V1_pk: &TRANSLINK_V1_pk
+    table: TRANSLINK_V1
+    pk: TRANSLINKID
+  SHAREINFO_V1_pk: &SHAREINFO_V1_pk
+    table: SHAREINFO_V1
+    pk: SHAREINFOID
+  CATEGORY_V1_pk: &CATEGORY_V1_pk
+    table: CATEGORY_V1
+    pk: CATEGID
+  TAG_V1_pk: &TAG_V1_pk
+    table: TAG_V1
+    pk: TAGID
+  TAGLINK_V1_pk: &TAGLINK_V1_pk
+    table: TAGLINK_V1
+    pk: TAGLINKID
+  integrity_checker_pk: &integrity_checker_pk
+    table: integrity_checker
+    pk: id
+    
+
+sample_validation_rules:
+  - id:                               # optional, id of rule
+    severity:                         # optional I, W, E
+    source:                           # mandatory
+      table:                          # mandatory table
+      pk:                             # optional primary key of table
+      field:                          # optional field to check
+      joinfield:                      # optional field for join, joinField || field || pk || null
+    fk:                               # optional table join
+      table:                          # mandatory if fk: is define, table for join
+      pk:                             # optional primary key for right table
+      joinfield:                      # optional field for join, if not present pk is used
+      field:                          # optional field to show in result = field || joinfield || pk || null
+    where:                            # optional additional where condition
+    check:                            # optional, if not present is check.value = is null
+      sql:                            # optional sql for where
+      value:                          # optional used to build ${( fk.field || fk.joinField || fk.pk || surce.field || source.pk )} ${check.value}
+    fix:                              # optional build fix 
+      update:                         # optional sql for update. remember to use (${source.pk}) to identify correct recod.
+      delete:                         # optional if present build delete statement for (${source.pk})
+      
+
+
+validation_rules:
+  # INFOTABLE
+  - id: INFOTABLE_V1.BASECURRENCYID in CURRENCYFORMATS_V1
+    # here we need to check specici line. row is identify by INFONAME = "BASECURRENCYID" and we need to check that INFOVALUE is in CURRENCYFORMATS_V1
+    source:
+      <<: *INFOTABLE_V1_pk
+      field: INFOVALUE
+      joinfield: INFOVALUE
+    where: INFOTABLE_V1.INFONAME = "BASECURRENCYID"
+    fk:
+      <<: *CURRENCYFORMATS_V1_pk
+
+
+  # CHECKINGACCOUNT_V1
+  - id: CHECKINGACCOUNT_V1.DELETEDTIME not null
+    severity: I
+    source:
+      <<: *CHECKINGACCOUNT_V1_pk
+      field: DELETEDTIME
+ 
+  - id: CHECKINGACCOUNT_V1.TRANSDATE < ACCOUNTLIST_V1.INITIALDATE
+    source:
+      <<: *CHECKINGACCOUNT_V1_pk
+      joinfield: ACCOUNTID
+      field: TRANSDATE
+    fk:
+      <<: *ACCOUNTLIST_V1_pk
+      field: INITIALDATE
+    where: CHECKINGACCOUNT_V1.DELETEDTIME is null or CHECKINGACCOUNT_V1.DELETEDTIME = ""
+    check:
+      sql: CHECKINGACCOUNT_V1.TRANSDATE < ACCOUNTLIST_V1.INITIALDATE
+    
+  - id: CHECKINGACCOUNT_V1.TRANSID in SPLITTRANSACTIONS_V1
+    source:
+      <<: *CHECKINGACCOUNT_V1_pk
+    fk:
+      <<: *SPLITTRANSACTIONS_V1_pk
+      joinfield: TRANSID
+    where: |
+        ( ( CHECKINGACCOUNT_V1.DELETEDTIME is null or CHECKINGACCOUNT_V1.DELETEDTIME = "" ) 
+        and CHECKINGACCOUNT_V1.CATEGID = -1 )
+    # check is not necessary, since we filter all relevant record and need to verify is transid exist in SPLITTRANSACTIONS_V1.TRANSID
+    # same as if we add:
+    # check
+    #   value: is null
+    # or
+    # check
+    #   sql : SPLITTRANSACTIONS_V1.TRANSID is null
+
+  - id: CHECKINGACCOUNT_V1.ACCOUNTID in ACCOUNTLIST_V1
+    source: 
+      <<: *CHECKINGACCOUNT_V1_pk
+      field: ACCOUNTID
+    fk: 
+      <<: *ACCOUNTLIST_V1_pk
+    where: CHECKINGACCOUNT_V1.DELETEDTIME is null or CHECKINGACCOUNT_V1.DELETEDTIME = ""
+
+  - id: CHECKINGACCOUNT_V1.TOACCOUNTID in ACCOUNTLIST_V1
+    source: 
+      <<: *CHECKINGACCOUNT_V1_pk
+      field: TOACCOUNTID
+    fk: 
+      <<: *ACCOUNTLIST_V1_pk  
+    where: CHECKINGACCOUNT_V1.DELETEDTIME is null or CHECKINGACCOUNT_V1.DELETEDTIME = ""
+
+
+ 
+  # SPLITTRANSACTIONS_V1 
+  - id: SPLITTRANSACTIONS_V1.TRANSID in CHECKINGACCOUNT_V1
+    source:
+      <<: *SPLITTRANSACTIONS_V1_pk
+      field: TRANSID
+    fk:
+      <<: *CHECKINGACCOUNT_V1_pk
+
+
+
+  # ACCOUNTLIST_V1
+  - id: ACCOUNTLIST_V1.CURRENCYID in CURRENCYFORMATS_V1
+    source: 
+      <<: *ACCOUNTLIST_V1_pk
+      field: CURRENCYID
+    fk:
+      <<: *CURRENCYFORMATS_V1_pk
+
+  # ASSETS_V1
+  - id: ACCOUNTLIST_V1.CURRENCYID in CURRENCYFORMATS_V1
+    source: 
+      <<: *ASSETS_V1_pk
+      field: CURRENCYID
+    fk:
+      <<: *CURRENCYFORMATS_V1_pk
+
+  # BILLSDEPOSITS_V1
+  - id: BILLSDEPOSITS_V1.ACCOUNTID in ACCOUNTLIST_V1
+    source: 
+      <<: *BILLSDEPOSITS_V1_pk
+      field: ACCOUNTID
+    fk:
+      <<: *ACCOUNTLIST_V1_pk  
+
+  - id: BILLSDEPOSITS_V1.TOAccountID in ACCOUNTLIST_V1
+    source: 
+      <<: *BILLSDEPOSITS_V1_pk
+      field: TOACCOUNTID
+    fk:
+      <<: *ACCOUNTLIST_V1_pk  
+    where: BILLSDEPOSITS_V1.TOACCOUNTID > 0
+
+  - id: BILLSDEPOSITS_V1.PAYEEID in PAYEEID
+    source: 
+      <<: *BILLSDEPOSITS_V1_pk
+      field: PAYEEID
+    fk:
+      <<: *PAYEE_V1_pk  
+
+  - id: BILLSDEPOSITS_V1.CATEGID in CATEGORY_V1
+    source: 
+      <<: *BILLSDEPOSITS_V1_pk
+      field: CATEGID
+    fk:
+      <<: *CATEGORY_V1_pk  
+    where: BILLSDEPOSITS_V1.CATEGID > 0
+
+  - id: BILLSDEPOSITS_V1.COLOR	in [-1..7]
+    source: 
+      <<: *BILLSDEPOSITS_V1_pk
+      field: COLOR
+    check:
+      value: in (-1, 0, 1, 2, 3, 4, 5, 6, 7)
+
+  # CATEGORY_V1 
+  - id: CATEGORY_V1.PARENTID in CATEGORY_V1
+    source: 
+      <<: *CATEGORY_V1_pk
+      field: PARENTID
+    fk:
+      <<: *CATEGORY_V1_pk  
+    where: __LEFT_TABLE.PARENTID > 0
+
+
+ 

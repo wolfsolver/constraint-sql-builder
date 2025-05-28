@@ -14,8 +14,8 @@ export function generateSqlFromYaml(yamlContent) {
         if (!config || !config.validation_rules) {
             throw new Error("YAML non valido o manca la sezione 'validation_rules'.");
         }
-
-        let addRowId = config.setting?.add_row_id || false;
+        let addRowId = config.setting?.hasOwnProperty("add_row_id") ? config.setting.add_row_id : true;
+        console.log("Rowid is: ", addRowId);
 
         // sort rule
         if ( Array.isArray(config.validation_rules ) ) {
@@ -73,28 +73,41 @@ function parseSingleRule(addRowId, counter, rule) {
       console.log("set default on success: ", rule.on_success);
     }
 
+    // this used for identity source row
+    let sourcePk        = rule.source?.pk || null;
+    // this used for identity witch field is used in check and in select
+    let sourceField     = rule.source?.field || rule.source?.jointField || sourcePk;
+    // this used for identity only for join
+    let sourceJoinField = rule.source?.joinField || rule.source?.field || sourcePk;
+
+    let rightTable  =  rule.fk?.table || null;
+    // this is used to identity pk of dest table. tenically not used directly but in destjoin or dest field.
+    let destPk          = rule.fk?.pk || null;
+    // this is used to build join
+    let destJoinField   = rule.fk?.joinfield || destPk;
+    // this is used to show result
+    let destField       = rule.fk?.field || destJoinField;
+
     let selectClause = '';
     selectClause += `  , '${rule.id}' AS ID\n`;
     selectClause += `  , '${rule.severity}' AS SEVERITY\n`;
     selectClause += `  , '${rule.source.table}' AS TABLE_NAME_VALUE\n`;
 
-    if ( rule.source.pk ) {
-      selectClause += `  , '${rule.source.pk}' AS TABLE_PK_NAME\n`;
-      selectClause += `  , ${tableAlias}.${rule.source.pk} AS TABLE_PK_VALUE\n`;
+    if ( sourcePk ) {
+      selectClause += `  , '${sourcePk}' AS TABLE_PK_NAME\n`;
+      selectClause += `  , ${tableAlias}.${sourcePk} AS TABLE_PK_VALUE\n`;
     } else {
       selectClause += "  , null AS TABLE_PK_NAME\n";
       selectClause += "  , null AS TABLE_PK_VALUE\n";
     }
 
-    if (rule.source.field) {
-        selectClause += `  , '${rule.source.field}' AS TABLE_FIELD_NAME\n`;
-        selectClause += `  , ${tableAlias}.${rule.source.field} AS TABLE_FIELD_VALUE\n`;
+    if (sourceField && sourceField != sourcePk) {
+        selectClause += `  , '${sourceField}' AS TABLE_FIELD_NAME\n`;
+        selectClause += `  , ${tableAlias}.${sourceField} AS TABLE_FIELD_VALUE\n`;
     } else {
         selectClause += `  , null AS TABLE_FIELD_NAME\n`;
         selectClause += `  , null AS TABLE_FIELD_VALUE\n`;
     }
-
-    let fieldForStandardWhere = rule.source.field || rule.source.pk;
 
     // message could to be set during where
     let message = rule.on_fail?.message || rule.on_success?.message || null;
@@ -105,7 +118,7 @@ function parseSingleRule(addRowId, counter, rule) {
           message = `NOT ( ${message} )`;
         }
       } else if ( rule.fk ) {
-        message = "${sourceField} of ${source.table} is not in table ${fk.table} by ${targetPk}";
+        message = "${sourceField} of ${source.table} is not in table ${fk.table} by ${destJoinField}";
         if (rule.hasOwnProperty("on_fail")) {
           message = `NOT ( ${message} )`;
         }
@@ -116,18 +129,24 @@ function parseSingleRule(addRowId, counter, rule) {
 
     let fromClause = `${rule.source.table} AS ${tableAlias}\n`;
     let joinClause = '';
-    const rightTable  = ( rule.fk && rule.fk.table) ? rule.fk.table : null;
-    const targetPk    = ( rule.fk && ( rule.fk.pk || rule.fk.field )) ? rule.fk.pk || rule.fk.field : null;
-    const targetField = ( rule.fk && ( rule.fk.field || rule.fk.pk )) ? rule.fk.field || rule.fk.pk : null;
-    const sourceField = rule.source.field || rule.source.pk || null;
+
+// TODO    const sourceField = sourceJoinField
     if (rule.fk) {
-        joinClause = `LEFT JOIN ${rightTable} AS ${fkAlias} ON ${fkAlias}.${targetPk} = ${tableAlias}.${sourceField}\n`;
+        joinClause = `LEFT JOIN ${rightTable} AS ${fkAlias} ON ${fkAlias}.${destJoinField} = ${tableAlias}.${sourceJoinField}\n`;
     }
 
     let whereClause = '';
+
+    if (rule.where) {
+      // row whjere to ad
+      let whereClauseLocal = rule.where.replaceAll(rule.source.table+".", tableAlias+".");
+      if (rule.fk) whereClauseLocal = whereClauseLocal.replaceAll(rule.fk.table+".", fkAlias+".");
+      whereClause += `AND ( ${whereClauseLocal} )\n`;
+    }
+
     if (rule.check) {
         if (rule.check.value) {
-           let whereClauseLocal = `${tableAlias}.${fieldForStandardWhere} ${rule.check.value}`;
+           let whereClauseLocal = `${tableAlias}.${sourceJoinField} ${rule.check.value}`;
            whereClause += `AND ( ${whereClauseLocal} )\n`;
         }
         if (rule.check.sql) {
@@ -138,9 +157,9 @@ function parseSingleRule(addRowId, counter, rule) {
         }
     } else if( rule.fk ) {
       // use force where on fk
-      whereClause += `AND ( ${fkAlias}.${targetPk} is null ) \n`;
+      whereClause += `AND ( ${fkAlias}.${destJoinField} is null ) \n`;
       if (!message) {
-        message = "${sourceField} of ${source.table} is not in table ${fk.table} by ${targetPk}";
+        message = "${sourceField} of ${source.table} is not in table ${fk.table} by ${destJoinField}";
       }
     }
 
@@ -166,9 +185,12 @@ function parseSingleRule(addRowId, counter, rule) {
 
     // replace all placeholder in message
     message = message.replaceAll(tableAlias, rule.source.table);
+    message = message.replaceAll("${sourcePk}", sourcePk);
     message = message.replaceAll("${sourceField}", sourceField);
-    message = message.replaceAll("${targetPk}", targetPk);
-    message = message.replaceAll("${targetField}", targetField);
+    message = message.replaceAll("${sourceJoinField}", sourceJoinField);
+    message = message.replaceAll("${destPk}", destPk);
+    message = message.replaceAll("${destJoinField}", destJoinField);
+    message = message.replaceAll("${destField}", destField);
     if (message.includes("(${")) { // use indirect approach
       // add table if missing
       message = message.replaceAll("(${", "' || ${");
