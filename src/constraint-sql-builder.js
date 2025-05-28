@@ -15,6 +15,8 @@ export function generateSqlFromYaml(yamlContent) {
             throw new Error("YAML non valido o manca la sezione 'validation_rules'.");
         }
 
+        let addRowId = config.setting?.add_row_id || false;
+
         // sort rule
         if ( Array.isArray(config.validation_rules ) ) {
             config.validation_rules.sort((a, b) => {
@@ -22,14 +24,19 @@ export function generateSqlFromYaml(yamlContent) {
                 const priorityB = b.priority !== undefined && b.priority !== null ? b.priority : Infinity;
                 return priorityA - priorityB;
             });
+            let sqlSeparator = (config.setting?.separator) || ";";
             let counter = 0;
             config.validation_rules.forEach(rule => {
+                if (counter > 0) {
+                  generatedSql += sqlSeparator+"\n";
+                }
                 counter++;
-                generatedSql += parseSingleRule(counter, rule);
+                generatedSql += parseSingleRule(addRowId, counter, rule);
             });
         } else {
-          generatedSql = parseSingleRule(1, config.validation_rules);
+          generatedSql = parseSingleRule(addRowId, 1, config.validation_rules);
         }
+        generatedSql += ";\n";
         return generatedSql;
 //    } catch (e) {
 //        console.error('Errore durante la generazione SQL:', e.message);
@@ -37,7 +44,7 @@ export function generateSqlFromYaml(yamlContent) {
 //    }
 }
 
-function parseSingleRule(counter, rule) {
+function parseSingleRule(addRowId, counter, rule) {
     let generatedSql = '';
 
     console.log("rule =", rule);
@@ -111,7 +118,7 @@ function parseSingleRule(counter, rule) {
     let joinClause = '';
     const rightTable  = ( rule.fk && rule.fk.table) ? rule.fk.table : null;
     const targetPk    = ( rule.fk && ( rule.fk.pk || rule.fk.field )) ? rule.fk.pk || rule.fk.field : null;
-    const targetField    = ( rule.fk && ( rule.fk.field || rule.fk.pk )) ? rule.fk.pk || rule.fk.field || rule.fk.pk : null;
+    const targetField = ( rule.fk && ( rule.fk.field || rule.fk.pk )) ? rule.fk.field || rule.fk.pk : null;
     const sourceField = rule.source.field || rule.source.pk || null;
     if (rule.fk) {
         joinClause = `LEFT JOIN ${rightTable} AS ${fkAlias} ON ${fkAlias}.${targetPk} = ${tableAlias}.${sourceField}\n`;
@@ -125,7 +132,8 @@ function parseSingleRule(counter, rule) {
         }
         if (rule.check.sql) {
           let whereClauseLocal = rule.check.sql;
-          whereClauseLocal = whereClauseLocal.replaceAll(rule.source.table+".", tableAlias+".")
+          whereClauseLocal = whereClauseLocal.replaceAll(rule.source.table+".", tableAlias+".");
+          if (rule.fk) whereClauseLocal = whereClauseLocal.replaceAll(rule.fk.table+".", fkAlias+".");
           whereClause += `AND ( ${whereClauseLocal} )\n`;
         }
     } else if( rule.fk ) {
@@ -175,7 +183,13 @@ function parseSingleRule(counter, rule) {
 
     selectClause += message;
 
-    generatedSql += `SELECT ROW_NUMBER() over( order by 1 ) as RowNum\n${selectClause}\n`;
+    if (addRowId) {
+      generatedSql += `SELECT ROW_NUMBER() over( order by 1 ) as RowNum\n${selectClause}\n`;
+    } else {
+      // remove initial ,
+      selectClause = selectClause.replace(/^  ,/, "   ");
+      generatedSql += `SELECT \n${selectClause}\n`;
+    }
     generatedSql += `FROM ${fromClause}`;
     if (joinClause) generatedSql += `${joinClause}`;
     if (whereClause) {
@@ -192,7 +206,7 @@ function parseSingleRule(counter, rule) {
 //        console.log("Where< ", whereClause);
         generatedSql += `WHERE ${whereClause}`;
     }
-    generatedSql += `\n;\n`;
+    generatedSql += `\n`;
     return generatedSql;
 }
 
