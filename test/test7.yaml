@@ -1,0 +1,12 @@
+# WITHOUT Array with sql in check
+validation_rules:
+  id: test#7
+  source:
+    table: TABLE1
+    pk: TABLE1PK
+    field: FIELD1
+  fk:
+    table: TABLE2
+    pk: TABLE2PK
+# check: is null is default
+# on_success: is default

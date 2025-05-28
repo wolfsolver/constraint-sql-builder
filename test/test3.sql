@@ -1,13 +1,13 @@
 SELECT ROW_NUMBER() over( order by 1 ) as RowNum
-  , 'test#2' AS ID
+  , 'test#3' AS ID
   , 'E' AS SEVERITY
   , 'TABLE1' AS TABLE_NAME_VALUE
   , null AS TABLE_PK_NAME
   , null AS TABLE_PK_VALUE
-  , 'FIELD1' AS TABLE_FIELD_NAME
-  , __LEFT_TABLE.FIELD1 AS TABLE_FIELD_VALUE
+  , 'FIELD4' AS TABLE_FIELD_NAME
+  , __LEFT_TABLE.FIELD4 AS TABLE_FIELD_VALUE
   , null AS FIX
-  , 'NOT ( TABLE1.FIELD1 is not null )' AS MESSAGE
+  , 'FIELD4 is not Open or Close' AS MESSAGE
 FROM TABLE1 AS __LEFT_TABLE
-WHERE NOT( ( __LEFT_TABLE.FIELD1 is not null ) )
+WHERE NOT ( ( __LEFT_TABLE.FIELD4 in ("Open","Close") ) )
 ;

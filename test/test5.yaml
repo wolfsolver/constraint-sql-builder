@@ -1,0 +1,11 @@
+# WITHOUT Array with sql in check
+validation_rules:
+  id: test#5
+  source:
+    table: TABLE1
+    pk: TABLE1PK
+    field: FIELD1
+  check:
+    sql: FIELD1 = TABLE1.FIELD2 * TABLE1.FIELD3
+  on_fail:
+    message: ${source.field} of ${source.table} is not correct for (${source.pk})

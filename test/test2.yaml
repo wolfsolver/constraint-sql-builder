@@ -1,8 +1,9 @@
-# Set minimo
+# CHECK IF FIELD1 IS FILLED. IS NOT THIS IS AN ERROR
 validation_rules:
-  - source:
+  - id: test#2
+    source:
       table: TABLE1
       field: FIELD1
     check:
-      operator: is null
+      value: is not null
     on_fail:

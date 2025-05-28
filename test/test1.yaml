@@ -1,7 +1,8 @@
 # Set minimo
 validation_rules:
-  - source:
+  - id: test#1
+    source:
       table: TABLE1
       field: FIELD1
-    check:
-      operator: is not null
+# check: is null is default
+# on_success: is default

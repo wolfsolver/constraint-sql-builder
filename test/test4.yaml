@@ -1,0 +1,11 @@
+# WITHOUT Array
+validation_rules:
+  id: test#4
+  source:
+    table: TABLE1
+    pk: TABLE1PK
+    field: FIELD1
+  check:
+    value: is null
+  on_success:
+    message: ${source.field} of ${source.table} is null for key (${source.pk})

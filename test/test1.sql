@@ -1,12 +1,13 @@
-SELECT ROW_NUMBER() over( order by ID ) RowNum
-  , 'Unnamed #1' AS ID
+SELECT ROW_NUMBER() over( order by 1 ) as RowNum
+  , 'test#1' AS ID
   , 'E' AS SEVERITY
   , 'TABLE1' AS TABLE_NAME_VALUE
   , null AS TABLE_PK_NAME
   , null AS TABLE_PK_VALUE
   , 'FIELD1' AS TABLE_FIELD_NAME
   , __LEFT_TABLE.FIELD1 AS TABLE_FIELD_VALUE
-  , 'TABLE1.FIELD1 is not null' AS MESSAGE
+  , null AS FIX
+  , 'TABLE1.FIELD1 is null' AS MESSAGE
 FROM TABLE1 AS __LEFT_TABLE
-WHERE 1 AND ( __LEFT_TABLE.FIELD1 is not null )
+WHERE ( __LEFT_TABLE.FIELD1 is null )
 ;

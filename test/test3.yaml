@@ -1,0 +1,10 @@
+# Set minimo
+validation_rules:
+  - id: test#3
+    source:
+      table: TABLE1
+      field: FIELD4
+    check:
+      value: in ("Open","Close")
+    on_fail:
+      message: "${source.field} is not Open or Close"
