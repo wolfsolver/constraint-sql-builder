@@ -10,8 +10,6 @@ A Node.js tool designed to automate the generation of SQL `SELECT` statements. I
 
 ## 🚀 Getting Started
 
-Read [ReadMe](https://github.com/wolfsolver/constraint-sql-builder/blob/main/README.md) on github.
-
 ## ⚙️ Usage
 
 ### From command line
