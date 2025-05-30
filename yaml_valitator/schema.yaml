@@ -1,58 +1,35 @@
-# Schema Yamale per il file di configurazione DBCheck
-validation_rules:
-  type: list
-  include: rule_definition # Includiamo la definizione di una singola regola
+# schema.yaml
 
-# Definizione di una singola regola di validazione
-rule_definition:
-  type: map
-  mapping:
-    id: str(required=True)
-    severity: str(required=False, enum=['E', 'W', 'I']) # Error, Warning, Info,
-      # if not present is "E"
+setting:
+  separator: str(enum('union', ';'), required=True)
+  add_row_id: bool(required=True)
 
-    source:
-      type: map
-      mapping:
-        table: str(required=True)
-        pk: str(required=True)
-        field: str(required=False) # Il campo può non essere presente (es. Free Form senza field)
+validation_rules: list(include('validation_rule'), required=True)
 
-    fk:
-      type: map(required=False) # fk è opzionale
-      mapping:
-        target:
-          type: map
-          mapping:
-            table: str(required=True)
-            pk: str(required=True)
-            field: str(required=False) # field è opzionale qui (default alla PK)
+validation_rule:
+  id: str(required=False)
+  severity: str(enum('I', 'W', 'E'), required=False) # default E present indicates a delete operation
+  source: include('table_definition', required=True)
+  fk: include('table_definition', required=False)
+  where: str(required=False)
+  check: include('check_definition', required=False)
+  on_success: include('message_definition', required=False)
+  on_fail: include('message_definition', required=False)
+  fix: include('fix_definition', required=False)
 
-    check:
-      type: any(str(), map(), map(required=False) # check è opzionale
-      mapping:
-        operator: str(required=False, enum=['not null', 'is null', 'in', '<', '<=', '=', '>=', '>']) # Aggiungi altri operatori se necessari
-        value: str(required=False) # I valori per 'in' sono stringhe (es. "('Open','Closed')")
-        sql: str(required=False) # Query SQL personalizzata
+table_definition:
+  table: str(required=True)
+  pk: str(required=False)
+  field: str(required=False)
+  joinfield: str(required=False)
 
-    on_fail:
-      type: map(required=False) # on_fail è opzionale
-      mapping:
-        message: str(required=True)
-        fix: include(fix_definition) # Includiamo la definizione del fix
+check_definition:
+  sql: str(required=False)
+  value: str(required=False)
 
-    on_success:
-      type: map(required=False) # on_success è opzionale
-      mapping:
-        message: str(required=True)
-        fix: include(fix_definition) # Includiamo la definizione del fix
+message_definition:
+  message: str(required=True)
 
-# Definizione del blocco 'fix'
 fix_definition:
-  type: any(str(), map()) # Può essere una stringa SQL diretta o una mappa con delete/update
-  mapping:
-    delete: any(bool(required=False), null(required=False)) # Può essere `true` o semplicemente presente
-    update: str(required=False) # Il valore di update è una stringa (es. "")
-    # Se il fix è una stringa SQL diretta, non avrà delete/update,
-    # ecco perché `any(str(), map())` è importante.
-    # In questo caso, Yamale non può validare il contenuto della stringa SQL, ma solo che sia una stringa.
+  update: str(required=False)
+  delete: bool(required=False) # True or simplyt present indicates a delete operation
