@@ -2,9 +2,9 @@
 
 A Node.js tool designed to automate the generation of SQL `SELECT` statements. It leverages declarative YAML files to define data constraints, transforming them into executable SQL queries with appropriate `JOIN` and `WHERE` clauses. This project is ideal for maintaining data quality checks, audit trails, and reporting tasks.
 
-> [!CAUTION]
+> [!WARNING]
 > This repo is a working progress.
-> No package is released
+> ALPHA package is released
 
 ---
 
