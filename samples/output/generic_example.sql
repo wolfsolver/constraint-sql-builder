@@ -127,7 +127,8 @@ SELECT ROW_NUMBER() over( order by 1 ) as RowNum
   , __LEFT_TABLE.TABLE1PK AS TABLE_PK_VALUE
   , 'FIELD1' AS TABLE_FIELD_NAME
   , __LEFT_TABLE.FIELD1 AS TABLE_FIELD_VALUE
-  , 'UPDATE TABLE1 SET FIELD1 = "" WHERE TABLE1.TABLE1PK = ' || TABLE1.TABLE1PK || '' AS FIX  , '$source.field of $source.table is null' AS MESSAGE
+  , null AS FIX
+  , '$source.field of $source.table is null' AS MESSAGE
 FROM TABLE1 AS __LEFT_TABLE
 
 ;
@@ -139,7 +140,8 @@ SELECT ROW_NUMBER() over( order by 1 ) as RowNum
   , __LEFT_TABLE.TABLE1PK AS TABLE_PK_VALUE
   , 'FIELD1' AS TABLE_FIELD_NAME
   , __LEFT_TABLE.FIELD1 AS TABLE_FIELD_VALUE
-  , '' AS FIX  , '$source.field of $source.table is null' AS MESSAGE
+  , null AS FIX
+  , '$source.field of $source.table is null' AS MESSAGE
 FROM TABLE1 AS __LEFT_TABLE
 
 ;
@@ -151,7 +153,8 @@ SELECT ROW_NUMBER() over( order by 1 ) as RowNum
   , __LEFT_TABLE.TABLE1PK AS TABLE_PK_VALUE
   , 'FIELD1' AS TABLE_FIELD_NAME
   , __LEFT_TABLE.FIELD1 AS TABLE_FIELD_VALUE
-  , 'UPDATE TABLE1 SET FIELD1 = "unknow" WHERE TABLE1.TABLE1PK = ' || TABLE1.TABLE1PK || '' AS FIX  , '$source.field of $source.table is null' AS MESSAGE
+  , null AS FIX
+  , '$source.field of $source.table is null' AS MESSAGE
 FROM TABLE1 AS __LEFT_TABLE
 
 ;
