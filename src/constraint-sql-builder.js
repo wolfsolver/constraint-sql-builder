@@ -163,22 +163,18 @@ function parseSingleRule(addRowId, counter, rule) {
       }
     }
 
-    const fixSection = rule.on_fail?.fix || rule.on_success?.fix;
-
-    if (fixSection) {
+    if (rule.fix) {
         // todo
         let fixSql = '';
-        if (typeof fixSection === 'string') {
-            fixSql = fixSection.replace(/\$\{\{([A-Z0-9_]+\.[A-Z0-9_]+)\}\}/g, (match, p1) => {
-                const [tableName, fieldName] = p1.split('.');
-                return `' || ${tableName}.${fieldName} || '`;
-            });
-        } else if (fixSection.delete) {
-            fixSql = `DELETE FROM ${rule.source.table} WHERE ${rule.source.table}.${rule.source.pk} = ' || ${rule.source.table}.${rule.source.pk} || '`;
-        } else if (fixSection.update !== undefined) {
-            fixSql = `UPDATE ${rule.source.table} SET ${rule.source.field} = "${fixSection.update}" WHERE ${rule.source.table}.${rule.source.pk} = ' || ${rule.source.table}.${rule.source.pk} || '`;
+        if (typeof rule.fix === 'string') {
+            fixSql = rule.fix;
+        } else if (rule.fix.hasOwnProperty("delete")) {
+            fixSql = `DELETE FROM ${rule.source.table} WHERE ${rule.source.table}.${rule.source.pk} = \' || ${tableAlias}.${rule.source.pk} || \'`;
+        } else if (rule.fix.hasOwnProperty("update")) {
+            let v = rule.fix.update || '';
+            fixSql = `UPDATE ${rule.source.table} SET ${sourceField} = "${v}" WHERE ${rule.source.table}.${rule.source.pk} = \' || ${tableAlias}.${rule.source.pk} || \'`;
         }
-      selectClause += `  , '${fixSql}' AS FIX`;
+      selectClause += `  , '${fixSql}\n' AS FIX`;
     } else {
       selectClause += "  , null AS FIX\n";
     }

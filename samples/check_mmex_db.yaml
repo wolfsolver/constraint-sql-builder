@@ -1,8 +1,33 @@
 # Initial release for test to do on Money Manager Ex Database
 
+#validation_rules:
+#  - id:                               # optional, id of rule
+#    severity:                         # optional I, W, E
+#    source:                           # mandatory
+#      table:                          # mandatory table
+#      pk:                             # optional primary key of table
+#      field:                          # optional field to check
+#      joinfield:                      # optional field for join, joinField || field || pk || null
+#    fk:                               # optional table join
+#      table:                          # mandatory if fk: is define, table for join
+#      pk:                             # optional primary key for right table
+#      joinfield:                      # optional field for join, if not present pk is used
+#      field:                          # optional field to show in result = field || joinfield || pk || null
+#    where:                            # optional additional where condition
+#    check:                            # optional, if not present is check.value = is null
+#      sql:                            # optional sql for where
+#      value:                          # optional used to build ${( fk.field || fk.joinField || fk.pk || surce.field || source.pk )} ${check.value}
+#    on_success:                       # optional error if generated where is true
+#      message:                        # optional error message. valid ${struct.field} for name and (${struct.field}) for its content
+#    on_fail:                          # optional error if generated where is false. cannot be present with on_fail
+#      message:                        # optional error message. valid ${struct.field} for name and (${struct.field}) for its content
+#    fix:                              # optional build fix. Place here your SQL code with (${source.pk}) to identify correct record or use
+#      update:                         # optional sql for update. put here value for source.field
+#      delete:                         # optional if present build delete statement for (${source.pk})
+
 setting:
   separator: union  # valid or ;
-  add_row_id: false
+  add_row_id: false # default true show rowcounter
   
 definitions:
   INFOTABLE_V1_pk: &INFOTABLE_V1_pk
@@ -79,30 +104,9 @@ definitions:
     pk: id
     
 
-sample_validation_rules:
-  - id:                               # optional, id of rule
-    severity:                         # optional I, W, E
-    source:                           # mandatory
-      table:                          # mandatory table
-      pk:                             # optional primary key of table
-      field:                          # optional field to check
-      joinfield:                      # optional field for join, joinField || field || pk || null
-    fk:                               # optional table join
-      table:                          # mandatory if fk: is define, table for join
-      pk:                             # optional primary key for right table
-      joinfield:                      # optional field for join, if not present pk is used
-      field:                          # optional field to show in result = field || joinfield || pk || null
-    where:                            # optional additional where condition
-    check:                            # optional, if not present is check.value = is null
-      sql:                            # optional sql for where
-      value:                          # optional used to build ${( fk.field || fk.joinField || fk.pk || surce.field || source.pk )} ${check.value}
-    fix:                              # optional build fix 
-      update:                         # optional sql for update. remember to use (${source.pk}) to identify correct recod.
-      delete:                         # optional if present build delete statement for (${source.pk})
       
-
-
 validation_rules:
+
   # INFOTABLE
   - id: INFOTABLE_V1.BASECURRENCYID in CURRENCYFORMATS_V1
     # here we need to check specici line. row is identify by INFONAME = "BASECURRENCYID" and we need to check that INFOVALUE is in CURRENCYFORMATS_V1
@@ -114,13 +118,14 @@ validation_rules:
     fk:
       <<: *CURRENCYFORMATS_V1_pk
 
-
   # CHECKINGACCOUNT_V1
   - id: CHECKINGACCOUNT_V1.DELETEDTIME not null
     severity: I
     source:
       <<: *CHECKINGACCOUNT_V1_pk
       field: DELETEDTIME
+    fix:
+      update: ''
  
   - id: CHECKINGACCOUNT_V1.TRANSDATE < ACCOUNTLIST_V1.INITIALDATE
     source:
@@ -216,7 +221,9 @@ validation_rules:
       <<: *BILLSDEPOSITS_V1_pk
       field: PAYEEID
     fk:
-      <<: *PAYEE_V1_pk  
+      <<: *PAYEE_V1_pk
+    fix:
+      delete:    
 
   - id: BILLSDEPOSITS_V1.CATEGID in CATEGORY_V1
     source: 
@@ -232,7 +239,15 @@ validation_rules:
       field: COLOR
     check:
       value: in (-1, 0, 1, 2, 3, 4, 5, 6, 7)
-
+    on_fail:
+  # CURRENCYHISTORY_V1
+  - id: CURRENCYHISTORY_V1.CURRENCYID in CURRENCYFORMATS_V1
+    source: 
+      <<: *CURRENCYHISTORY_V1_pk
+      field: CURRENCYID
+    fk:
+      <<: *CURRENCYFORMATS_V1_pk  
+ 
   # CATEGORY_V1 
   - id: CATEGORY_V1.PARENTID in CATEGORY_V1
     source: 
@@ -242,5 +257,85 @@ validation_rules:
       <<: *CATEGORY_V1_pk  
     where: __LEFT_TABLE.PARENTID > 0
 
+  # SPLITTRANSACTIONS_V1
+  - id: SPLITTRANSACTIONS_V1.TRANSID in CHECKINGACCOUNT_V1
+    source: 
+      <<: *SPLITTRANSACTIONS_V1_pk
+      field: TRANSID
+    fk:
+      <<: *CHECKINGACCOUNT_V1_pk    
+  - id: SPLITTRANSACTIONS_V1.CATEGID in CATEGORY_V1
+    source:
+      <<: *SPLITTRANSACTIONS_V1_pk
+      field: CATEGID
+    fk:
+      <<: *CATEGORY_V1_pk
 
- 
+  # BUDGETSPLITTRANSACTIONS_V1
+  - id: BUDGETSPLITTRANSACTIONS_V1.TRANSID in CHECKINGACCOUNT_V1
+    source: 
+      <<: *BUDGETSPLITTRANSACTIONS_V1_pk
+      field: TRANSID
+    fk:
+      <<: *CHECKINGACCOUNT_V1_pk    
+  - id: BUDGETSPLITTRANSACTIONS_V1.CATEGID in CATEGORY_V1
+    source:
+      <<: *BUDGETSPLITTRANSACTIONS_V1_pk
+      field: CATEGID
+    fk:
+      <<: *CATEGORY_V1_pk
+
+  # BUDGETTABLE_V1
+  - id: BUDGETTABLE_V1.BUDGETYEARID in BUDGETYEAR_V1
+    source:
+      <<: *BUDGETTABLE_V1_pk
+      field: BUDGETYEARID
+    fk:
+      <<: *BUDGETYEAR_V1_pk
+  - id: BUDGETTABLE_V1.CATEGID in CATEGORY_V1
+    source:
+      <<: *BUDGETTABLE_V1_pk
+      field: CATEGID
+    fk:
+      <<: *CATEGORY_V1_pk
+
+  # ATTACHMENT_V1
+  - id: ATTACHMENT_V1.REFID in CHECKINGACCOUNT_V1
+    source:
+      <<: *ATTACHMENT_V1_pk
+      field: REFID
+    fk:
+      <<: *CHECKINGACCOUNT_V1_pk
+    where: ATTACHMENT_V1.REFTYPE = "Transaction"
+  - id: ATTACHMENT_V1.REFID in BILLSDEPOSITS_V1
+    source:
+      <<: *ATTACHMENT_V1_pk
+      field: REFID
+    fk:
+      <<: *BILLSDEPOSITS_V1_pk
+    where: ATTACHMENT_V1.REFTYPE = "RecurringTransaction"
+  # TAGLINK_V1
+  - id: TAGLINK_V1.REFID in CHECKINGACCOUNT_V1
+    source: 
+      <<: *TAGLINK_V1_pk
+      field: REFID
+    fk:
+      <<: *CHECKINGACCOUNT_V1_pk
+    where: TAGLINK_V1.REFTYPE = 'Transaction'
+    
+  - id: TAGLINK_V1.REFID in BILLSDEPOSITS_V1
+    source: 
+      <<: *TAGLINK_V1_pk
+      field: REFID
+    fk:
+      <<: *BILLSDEPOSITS_V1_pk
+    where: TAGLINK_V1.REFTYPE = 'RecurringTransaction'   
+    
+  - id: TAGLINK_V1.TAGID in TAG_V1
+    source: 
+      <<: *TAGLINK_V1_pk
+      field: TAGID
+    fk:
+      <<: *TAG_V1_pk
+   
+
