@@ -18,23 +18,37 @@
 <h1>DBCheck SQL Generator</h1>
 
 <p>Incolla qui il tuo file YAML di configurazione o trascinalo nell'area di testo.</p>
+<div id="appVersion">version</div>
 
 <div class="container">
     <div class="input-section">
         <h2>Input YAML</h2>
         <textarea id="yamlInput" placeholder="Incolla qui il tuo YAML o trascina un file YAML...">
 validation_rules:
-  - id: SAMPLE_TABLE1_FIELD1 NOT_NULL
-    priority: 0
-    severity: E
-    source:
-      table: TABLE1
-      pk: TABLE1PK
-      field: FIELD1
-    check:
-      operator: not null
-    on_fail:
-      message: "$source.field of $source.table is null"
+  - id:       rule#1                        # optional, id of rule
+    severity: E                        # optional I, W, E
+    source:                           # mandatory
+      table:  table1                        # mandatory table
+      pk:     table1pk                        # optional primary key of table
+      field:  table1field                        # optional field to check
+      joinfield: fable1join                     # optional field for join, joinField || field || pk || null
+    fk:                               # optional table join
+      table:  table2                        # mandatory if fk: is define, table for join
+      pk:     table2pk                        # optional primary key for right table
+      joinfield: table2join                     # optional field for join, if not present pk is used
+      field:     table2file                     # optional field to show in result = field || joinfield || pk || null
+    where:       table1.fieldX is not null                     # optional additional where condition
+    check:                            # optional, if not present is check.value = is null
+      sql:                            # optional sql for where
+      value:     is null                     # optional used to build ${( fk.field || fk.joinField || fk.pk || surce.field || source.pk )} ${check.value}
+    on_success:                       # optional error if generated where is true
+      message:   record ${source.field} error                     # optional error message. valid ${struct.field} for name and (${struct.field}) for its content
+    on_fail:                          # optional error if generated where is false. cannot be present with on_fail
+      message:                        # optional error message. valid ${struct.field} for name and (${struct.field}) for its content
+    fix:                              # optional build fix. Place here your SQL code with (${source.pk}) to identify correct record or use
+      update:                         # optional sql for update. put here value for source.field
+      delete:                         # optional if present build delete statement for (${source.pk})
+
         </textarea>
         <input type="file" id="yamlFile" accept=".yaml, .yml">
         <button id="generateBtn">Genera SQL</button> </div>

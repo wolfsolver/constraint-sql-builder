@@ -1,5 +1,8 @@
 import yaml from 'js-yaml';
 
+export function version() {
+  return "0.1-alpha";
+}
 
 /**
  * Esegue un comando su un input di testo e restituisce un output.

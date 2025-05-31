@@ -1,13 +1,17 @@
 // src/browser.js
 
 import { generateSqlFromYaml } from './constraint-sql-builder.js'; // Importa la funzione condivisa
+import { version } from './constraint-sql-builder.js'; // Importa la funzione condivisa
 
 document.addEventListener('DOMContentLoaded', () => {
+    const appVersion = document.getElementById('appVersion');
     const yamlInput = document.getElementById('yamlInput');
     const yamlFile = document.getElementById('yamlFile');
     const sqlOutput = document.getElementById('sqlOutput');
     const generateBtn = document.getElementById('generateBtn'); // Ottieni il riferimento al bottone
     const downloadBtn = document.getElementById('downloadBtn');
+
+    appVersion.innerHTML = "version "+ version() +" by WolfSolver";
 
     // Funzione per leggere il file YAML trascinato o selezionato
     yamlInput.addEventListener('drop', handleFileDrop, false);

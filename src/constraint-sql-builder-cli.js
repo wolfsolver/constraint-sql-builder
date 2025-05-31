@@ -3,7 +3,9 @@ import path from 'path';
 import fs from 'node:fs';
 
 import { generateSqlFromYaml } from './constraint-sql-builder.js'; // Importa la funzione condivisa
+import { version } from './constraint-sql-builder.js'; // Importa la funzione condivisa
 
+console.error('constraint-sql-builder - version '+version()+" by WolfSolver");
     const args = process.argv.slice(2); // Ignora 'node' e 'generate-sql-cli.js'
 
     if (args.length !== 2) {
